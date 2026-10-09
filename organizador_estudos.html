@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu Organizador de Estudos</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6fb;color:#1f2937}
+header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;padding:28px 18px}
+header h1{margin:0 0 6px;font-size:28px}
+header p{margin:0;opacity:.9}
+.container{max-width:900px;margin:auto;padding:18px}
+.card{background:white;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 5px 18px #00000010}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{text-align:center;padding:15px;background:#f8fafc;border-radius:12px}
+.stat strong{display:block;font-size:25px;color:#4f46e5}
+h2{font-size:19px;margin-top:0}
+.form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px}
+input,select,button{padding:12px;border-radius:10px;border:1px solid #d1d5db;font-size:15px}
+button{border:0;background:#4f46e5;color:white;font-weight:bold;cursor:pointer}
+button:hover{opacity:.9}
+.task{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee}
+.task:last-child{border-bottom:0}
+.task input{width:20px;height:20px}
+.task-info{flex:1}
+.task.done .title{text-decoration:line-through;color:#9ca3af}
+.subject{font-size:12px;color:#6366f1;font-weight:bold}
+.delete{background:#ef4444;padding:8px 10px}
+.progress{height:12px;background:#e5e7eb;border-radius:20px;overflow:hidden}
+.progress-bar{height:100%;background:#4f46e5;width:0%;transition:.3s}
+.empty{text-align:center;color:#9ca3af;padding:20px}
+
+.calendar{margin-top:20px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden}
+.calendar-header{display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc}
+.calendar-header h3{margin:0;font-size:18px;text-transform:capitalize}
+.calendar-header button{width:40px;height:40px;padding:0;font-size:24px}
+.weekdays,.calendar-days{display:grid;grid-template-columns:repeat(7,1fr)}
+.weekdays div{text-align:center;font-weight:bold;font-size:12px;color:#6b7280;padding:10px 2px;background:#f8fafc}
+.day{min-height:76px;border-top:1px solid #eee;border-right:1px solid #eee;padding:6px;font-size:13px;position:relative}
+.day:nth-child(7n){border-right:0}
+.day-number{font-weight:bold}
+.other-month{color:#c4c7cc;background:#fafafa}
+.today{background:#eef2ff}
+.today .day-number{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:50%;background:#4f46e5;color:white}
+.exam-dot{margin-top:5px;padding:4px 5px;border-radius:6px;background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exam-list{margin-top:18px}
+.exam-list-title{font-weight:bold;margin-bottom:8px}
+@media(max-width:650px){
+ .day{min-height:62px;padding:4px;font-size:11px}
+ .exam-dot{font-size:9px;padding:3px}
+ .calendar-header h3{font-size:16px}
+}
+@media(max-width:650px){
+ .form{grid-template-columns:1fr}
+ .stats{grid-template-columns:1fr 1fr}
+ header h1{font-size:24px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <h1>📚 Meu Organizador de Estudos</h1>
+    <p>Organize suas tarefas e acompanhe seu progresso.</p>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <div class="stats">
+      <div class="stat"><strong id="total">0</strong>Tarefas</div>
+      <div class="stat"><strong id="completed">0</strong>Concluídas</div>
+      <div class="stat"><strong id="percent">0%</strong>Progresso</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>➕ Adicionar tarefa</h2>
+    <div class="form">
+      <input id="taskInput" placeholder="Ex.: Estudar matemática">
+      <select id="subjectInput">
+        <option>Matemática</option>
+        <option>Português</option>
+        <option>Redação</option>
+        <option>Artes</option>
+        <option>Educação Física</option>
+        <option>Ciências</option>
+        <option>Biologia</option>
+        <option>Física</option>
+        <option>Química</option>
+        <option>História</option>
+        <option>Geografia</option>
+        <option>Inglês</option>
+        <option>Espanhol</option>
+        <option>Filosofia</option>
+        <option>Sociologia</option>
+        <option>Ensino Religioso</option>
+        <option>Tecnologia</option>
+        <option>Outra</option>
+      </select>
+      <button onclick="addTask()">Adicionar</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📊 Seu progresso</h2>
+    <div class="progress"><div class="progress-bar" id="bar"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>📝 Minhas tarefas</h2>
+    <div id="tasks"></div>
+  </section>
+
+  <section class="card">
+    <h2>📅 Calendário de provas</h2>
+    <div class="form">
+      <input id="examName" placeholder="Ex.: Prova de frações">
+      <input id="examDate" type="date">
+      <select id="examSubject">
+        <option>Matemática</option>
+        <option>Português</option>
+        <option>Redação</option>
+        <option>Artes</option>
+        <option>Educação Física</option>
+        <option>Ciências</option>
+        <option>Biologia</option>
+        <option>Física</option>
+        <option>Química</option>
+        <option>História</option>
+        <option>Geografia</option>
+        <option>Inglês</option>
+        <option>Espanhol</option>
+        <option>Filosofia</option>
+        <option>Sociologia</option>
+        <option>Ensino Religioso</option>
+        <option>Tecnologia</option>
+        <option>Outra</option>
+      </select>
+    </div>
+    <br>
+    <button onclick="addExam()">Adicionar prova</button>
+
+    <div class="calendar">
+      <div class="calendar-header">
+        <button onclick="changeMonth(-1)">‹</button>
+        <h3 id="monthTitle"></h3>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="weekdays">
+        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div>
+        <div>Qui</div><div>Sex</div><div>Sáb</div>
+      </div>
+      <div id="calendarDays" class="calendar-days"></div>
+    </div>
+
+    <div id="exams"></div>
+  </section>
+</main>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem("studyTasks") || "[]");
+let exams = JSON.parse(localStorage.getItem("studyExams") || "[]");
+
+function save(){
+  localStorage.setItem("studyTasks", JSON.stringify(tasks));
+  localStorage.setItem("studyExams", JSON.stringify(exams));
+}
+
+function addExam(){
+  const name=document.getElementById("examName");
+  const date=document.getElementById("examDate");
+  const subject=document.getElementById("examSubject");
+
+  if(!name.value.trim() || !date.value){
+    alert("Digite o nome e a data da prova!");
+    return;
+  }
+
+  exams.push({
+    id:Date.now(),
+    name:name.value.trim(),
+    date:date.value,
+    subject:subject.value
+  });
+
+  name.value="";
+  date.value="";
+  save();
+  render();
+}
+
+function deleteExam(id){
+  exams=exams.filter(e=>e.id!==id);
+  save();
+  render();
+}
+
+function renderExams(){
+  renderCalendar();
+}
+
+let calendarDate = new Date();
+
+function changeMonth(amount){
+  calendarDate.setMonth(calendarDate.getMonth()+amount);
+  renderCalendar();
+}
+
+function dateKey(year, month, day){
+  return `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+}
+
+function renderCalendar(){
+  const year=calendarDate.getFullYear();
+  const month=calendarDate.getMonth();
+  const monthNames=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+
+  document.getElementById("monthTitle").textContent=`${monthNames[month]} de ${year}`;
+
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const daysInPrevMonth=new Date(year,month,0).getDate();
+  const container=document.getElementById("calendarDays");
+  let cells="";
+
+  for(let i=firstDay-1;i>=0;i--){
+    cells+=`<div class="day other-month"><span class="day-number">${daysInPrevMonth-i}</span></div>`;
+  }
+
+  const today=new Date();
+  const todayKey=dateKey(today.getFullYear(),today.getMonth(),today.getDate());
+
+  for(let day=1;day<=daysInMonth;day++){
+    const key=dateKey(year,month,day);
+    const examsOnDay=exams.filter(e=>e.date===key);
+    const todayClass=key===todayKey?" today":"";
+
+    cells+=`<div class="day${todayClass}">
+      <div class="day-number">${day}</div>
+      ${examsOnDay.map(e=>`<div class="exam-dot" title="${escapeHtml(e.name)} — ${escapeHtml(e.subject)}">${escapeHtml(e.name)}</div>`).join("")}
+    </div>`;
+  }
+
+  const totalCells=firstDay+daysInMonth;
+  const remaining=(7-(totalCells%7))%7;
+
+  for(let day=1;day<=remaining;day++){
+    cells+=`<div class="day other-month"><span class="day-number">${day}</span></div>`;
+  }
+
+  container.innerHTML=cells;
+
+  const list=document.getElementById("exams");
+  const monthExams=exams
+    .filter(e=>{
+      const [y,m]=e.date.split("-").map(Number);
+      return y===year && m===month+1;
+    })
+    .sort((a,b)=>a.date.localeCompare(b.date));
+
+  if(monthExams.length===0){
+    list.innerHTML='<div class="empty">Nenhuma prova neste mês. 📚</div>';
+  }else{
+    list.innerHTML=`
+      <div class="exam-list">
+        <div class="exam-list-title">Provas deste mês</div>
+        ${monthExams.map(e=>{
+          const [y,m,d]=e.date.split("-");
+          return `<div class="task">
+            <div class="task-info">
+              <div class="title">${escapeHtml(e.name)}</div>
+              <div class="subject">${escapeHtml(e.subject)} • ${d}/${m}/${y}</div>
+            </div>
+            <button class="delete" onclick="deleteExam(${e.id})">Excluir</button>
+          </div>`;
+        }).join("")}
+      </div>`;
+  }
+}
+
+function escapeHtml(text){
+  const div=document.createElement("div");
+  div.textContent=text;
+  return div.innerHTML;
+}
+
+document.getElementById("taskInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter") addTask();
+});
+
+render();
+</script>
+</body>
+</html>
